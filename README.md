@@ -13,9 +13,14 @@
 In particular, manipulating the cross-attention layers of Text-to-Image (T2I) diffusion models has shown great promise in controlling the shape and location of objects in the scene. Transferring image-editing techniques to the video domain, however, is extremely challenging as object motion and temporal consistency are difficult to capture accurately. In this work, we take a first look at the role of cross-attention in Text-to-Video (T2V) diffusion models for zero-shot video editing. While one-shot models have shown potential in controlling motion and camera movement, we demonstrate zero-shot control over object shape, position and movement in T2V models. We show that despite the limitations of current T2V models, cross-attention guidance can be a promising approach for editing videos.
 
 ## Setup
-To set-up your environment, please follow the following steps:
+To set-up your environment and download one of the T2V models that we work with, please do these steps:
 ```
 conda create -n video-edit python=3.10
 conda activate video-edit
 pip install -r requirements.txt
+
+git clone https://github.com/sam-motamed/Video-Editing-X-Attention.git
+cd Video-Editing-X-Attention
+git lfs install
+git clone https://huggingface.co/damo-vilab/text-to-video-ms-1.7b ./models/model_scope_diffusers/
 ```
