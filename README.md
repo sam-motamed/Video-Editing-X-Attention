@@ -2,15 +2,15 @@
 <figures>
     <div>
       <img src="resources/original-burger.gif" width="210" height="210" >  
-      <figcaption>First Image<br><small>(250px X 500px)</small></figcaption>
+      <figcaption>First Image</figcaption>
     </div>
     <div>
       <img src="resources/ezgif.com-animated-gif-maker.gif"  width="210" height="210" > 
-      <figcaption>First Image<br><small>(250px X 500px)</small></figcaption>
+      <figcaption>First Image</figcaption>
     </div>
          <div>
       <img src="resources/edited-burger.gif" width="210" height="210" > 
-      <figcaption>First Image<br><small>(250px X 500px)</small></figcaption>
+      <figcaption>First Image</figcaption>
          </div>
 </figures>
 
