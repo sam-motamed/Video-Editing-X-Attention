@@ -8,7 +8,7 @@
     </figure>
     <figure style="display: inline-block; text-align: center;">
       <img src="resources/ezgif.com-animated-gif-maker.gif" alt="Caption 2" width="210" height="210" style="display: block;"> 
-      <figcaptionTarget Attention</figcaption>
+      <figcaption>Target Attention</figcaption>
     </figure>
     <figure style="display: inline-block; text-align: center;">
       <img src="resources/edited-burger.gif" alt="Caption 3" width="210" height="210" style="display: block;"> 
