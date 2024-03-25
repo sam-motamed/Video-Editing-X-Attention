@@ -42,9 +42,9 @@ git clone https://huggingface.co/damo-vilab/text-to-video-ms-1.7b ./models/model
 
 
 ### We specially thanks the work of the following repos that helped us immensely in building this work
-```
-[1](https://github.com/ExponentialML/Text-To-Video-Finetuning)
+
+[Text-To-Video-Finetuning](https://github.com/ExponentialML/Text-To-Video-Finetuning)
 https://github.com/silent-chen/layout-guidance/tree/main
 https://github.com/Sainzerjj/Free-Guidance-Diffusion/tree/master
 https://github.com/google/prompt-to-prompt
-```
+
