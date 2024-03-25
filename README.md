@@ -15,5 +15,7 @@ In particular, manipulating the cross-attention layers of Text-to-Image (T2I) di
 ## Setup
 To set-up your environment, please follow the following steps:
 ```
-pip install python
+conda create -n video-edit python=3.10
+conda activate video-edit
+pip install -r requirements.txt
 ```
