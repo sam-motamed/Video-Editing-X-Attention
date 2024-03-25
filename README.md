@@ -6,7 +6,7 @@
 <div align="center">
   <figure style="display: inline-block; text-align: center;">
     <img src="resources/original-burger.gif" alt="Caption 1" width="300" height="300" style="display: block;">
-    <figcaption>Caption 1</figcaption>
+    <figcaption style="text-align: center;">Caption 1</figcaption>
   </figure>
 
   <figure style="display: inline-block; text-align: center;">
