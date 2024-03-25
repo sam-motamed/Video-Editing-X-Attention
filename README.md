@@ -1,20 +1,18 @@
 # Investigating the Effectiveness of Cross Attention to Unlock Zero-Shot Editing of Text-to-Video Diffusion Models
-
-
-
+<section class="features">
     <figure style="display: inline-block; text-align: center;">
       <img src="resources/original-burger.gif" width="210" height="210" >  
-      <figcaption><br>Original Video</figcaption>
+      <figcaption><Original Video</figcaption>
     </figure>
     <figure style="display: inline-block; text-align: center;">
       <img src="resources/ezgif.com-animated-gif-maker.gif"  width="210" height="210" > 
       <figcaption>Target Attention</figcaption>
-    </figure>
+    </figure>   
     <figure style="display: inline-block; text-align: center;">
       <img src="resources/edited-burger.gif" width="210" height="210" > 
       <figcaption>Edited Video</figcaption>
     </figure>
-
+</section>
 
 ## Abstract
  With recent advances in image and video diffusion models for content creation, a plethora of techniques have been proposed for customizing their generated content. 
