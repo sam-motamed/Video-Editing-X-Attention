@@ -9,8 +9,7 @@
       <figcaption style="text-align: center;">Caption 1</figcaption>
     </figure>
 
-  
-  <div style="display: inline-block; text-align: center;">
+
     <figure style="display: inline-block; text-align: center;">
       <img src="resources/ezgif.com-animated-gif-maker.gif" alt="Caption 2" width="250" height="250" style="display: block;">
       <figcaption style="text-align: center;">Caption 1</figcaption>
