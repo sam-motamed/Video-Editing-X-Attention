@@ -1,7 +1,7 @@
 
 
 
-<div style="display: flex; justify-content: space-between;">
+<div style="text-align: center;">
 
   <div style="position: relative; text-align: center;">
     <img src="resources/original-burger.gif" width="200" height="200">
