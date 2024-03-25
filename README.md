@@ -1,7 +1,7 @@
 # Investigating the Effectiveness of Cross Attention to Unlock Zero-Shot Editing of Text-to-Video Diffusion Models
 
 
-<div align="center">
+
     <figure style="display: inline-block; text-align: center;">
       <img src="resources/original-burger.gif" width="210" height="210" >  
       <figcaption><br>Original Video</figcaption>
@@ -14,7 +14,6 @@
       <img src="resources/edited-burger.gif" width="210" height="210" > 
       <figcaption>Edited Video</figcaption>
     </figure>
-</div>
 
 
 ## Abstract
