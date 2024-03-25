@@ -2,15 +2,15 @@
 <section class="features">
     <figure style="display: inline-block; text-align: center;">
       <img src="resources/original-burger.gif" width="210" height="210" >  
-      <figcaption>Original Video</figcaption>
+      <figcaption>First Image<br><small>(250px X 500px)</small></figcaption>
     </figure>
     <figure style="display: inline-block; text-align: center;">
       <img src="resources/ezgif.com-animated-gif-maker.gif"  width="210" height="210" > 
-      <figcaption>Target Attention</figcaption>
+      <figcaption>First Image<br><small>(250px X 500px)</small></figcaption>
     </figure>   
     <figure style="display: inline-block; text-align: center;">
       <img src="resources/edited-burger.gif" width="210" height="210" > 
-      <figcaption>Edited Video</figcaption>
+      <figcaption>First Image<br><small>(250px X 500px)</small></figcaption>
     </figure>
 </section>
 
