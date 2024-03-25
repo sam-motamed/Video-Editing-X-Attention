@@ -5,6 +5,7 @@
       <img src="resources/ezgif.com-animated-gif-maker.gif"  width="210" height="210" > 
       <img src="resources/edited-burger.gif" width="210" height="210" > 
     </div>
+    <figcaption>From left to right; the original video generated with the caption "A burger floats on the water". The middle shows the target cross-attention maps to edit the burger so that it moves from the top-left to bottom-left of the scene. After updating the latent, the last video is generated capturing the intended edit.</figcaption>
 </figures>
 
 ## Abstract
