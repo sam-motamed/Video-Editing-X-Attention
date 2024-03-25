@@ -3,8 +3,8 @@
 
 <div align="center">
   <figure style="display: inline-block; text-align: center;">
-    <img src="resources/original-burger.gif" alt="a burger floats on the water" width="200" height="200" style="display: block;">
-    <figcaption>Caption 1</figcaption>
+    <img src="resources/original-burger.gif" alt="" width="200" height="200" style="display: block;">
+    <figcaption>"a burger floats on the water"</figcaption>
   </figure>
 
   <figure style="display: inline-block; text-align: center;">
