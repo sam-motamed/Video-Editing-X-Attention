@@ -1,6 +1,6 @@
 # Investigating the Effectiveness of Cross Attention to Unlock Zero-Shot Editing of Text-to-Video Diffusion Models
 
-
+<div>
 <div align="center">
   <div style="display: inline-block; text-align: center;">
     <figure style="text-align: center;">
