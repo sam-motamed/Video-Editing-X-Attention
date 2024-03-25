@@ -4,7 +4,7 @@
 <div align="center">
     <figure style="display: inline-block; text-align: center;">
       <img src="resources/original-burger.gif" width="210" height="210" >  
-      <figcaption>Original Video</figcaption>
+      <figcaption><br>Original Video</figcaption>
     </figure>
     <figure style="display: inline-block; text-align: center;">
       <img src="resources/ezgif.com-animated-gif-maker.gif"  width="210" height="210" > 
