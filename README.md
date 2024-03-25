@@ -43,8 +43,8 @@ git clone https://huggingface.co/damo-vilab/text-to-video-ms-1.7b ./models/model
 
 ### We specially thanks the work of the following repos that helped us immensely in building this work
 
-[ExponentialML/Text-To-Video-Finetuning](https://github.com/ExponentialML/Text-To-Video-Finetuning)
-[silent-chen/layout-guidance](https://github.com/silent-chen/layout-guidance/tree/main)
-[Sainzerjj/Free-Guidance-Diffusion](https://github.com/Sainzerjj/Free-Guidance-Diffusion/tree/master)
-[google/prompt-to-prompt](https://github.com/google/prompt-to-prompt)
+[ExponentialML/Text-To-Video-Finetuning](https://github.com/ExponentialML/Text-To-Video-Finetuning) 
+<br>[silent-chen/layout-guidance](https://github.com/silent-chen/layout-guidance/tree/main)
+<br>[Sainzerjj/Free-Guidance-Diffusion](https://github.com/Sainzerjj/Free-Guidance-Diffusion/tree/master)
+<br>[google/prompt-to-prompt](https://github.com/google/prompt-to-prompt)
 
