@@ -1,7 +1,7 @@
 # Investigating the Effectiveness of Cross Attention to Unlock Zero-Shot Editing of Text-to-Video Diffusion Models
 <figures>
     <div>
-      <img src="resources/video-edit-x-att (2).svg" width="210" height="210" >  
+      <img src="resources/video-edit-x-att (2).svg" width="1240" height="410" >  
     </div>
     <figcaption>From left to right; the original video generated with the caption "A burger floats on the water". The middle shows the target cross-attention maps to edit the burger so that it moves from the top-left to bottom-left of the scene. After updating the latent, the last video is generated capturing the intended edit.</figcaption>
 </figures>
