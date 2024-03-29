@@ -41,7 +41,7 @@ def keep_top_percent(tensor, percent=1):
 
 
 
-def draw_circle(tensor, height, width):
+def draw_circular_target_attention(tensor, height, width):
     # Calculate the centroid and radius of the circle
     centroid = ( 4.5* height) // 9
     center_x =  ( 4.5 * width) // 9
@@ -62,7 +62,7 @@ def draw_circle(tensor, height, width):
         tensor[i, circle_mask.flatten()] = 1
     return tensor
 
-def draw_filled_rectangle_per_channel(tensor, height, width):
+def draw_rectangulat_target_attention(tensor, height, width):
     start_x = int(2* width // 7)
     start_y = int(1 * height // 7)
     rect_height = 3 * int(height // 5)
@@ -91,28 +91,7 @@ def draw_filled_rectangle_per_channel(tensor, height, width):
 
 
     return tensor
-def draw_circle2(tensor, height, width):
-    # Calculate the centroid and radius of the circle
-    centroid = (3* height) // 4
-    center_x =  (1 * width) // 5
-    radius = height //6
 
-    # Create a grid of coordinates
-    x_grid, y_grid = torch.meshgrid(torch.arange(height), torch.arange(width))
-    
-    # Calculate distances from each pixel to the centroid
-    distances = torch.sqrt((x_grid - centroid)**2 + (y_grid - center_x)**2)
-    
-    # Create a mask for pixels within the circle
-    circle_mask = distances <= radius
-    
-    # Set values inside the circle to 1 for all channels
-    for i in range(tensor.size(0)):
-        tensor[i, ~circle_mask.flatten()] = 0
-        tensor[i, circle_mask.flatten()] = 1
-
-    
-    return tensor
 
 def gaussian_kernel(kernel_size, sigma):
     """
