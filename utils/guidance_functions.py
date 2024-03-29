@@ -1,3 +1,5 @@
+#This file is the modified version of the same file name from: https://github.com/Sainzerjj/Free-Guidance-Diffusion/blob/master/free_guidance.py
+
 import torch
 from torch import tensor
 from einops import rearrange
@@ -62,7 +64,7 @@ def draw_circular_target_attention(tensor, height, width):
         tensor[i, circle_mask.flatten()] = 1
     return tensor
 
-def draw_rectangulat_target_attention(tensor, height, width):
+def draw_rectangular_target_attention(tensor, height, width):
     start_x = int(2* width // 7)
     start_y = int(1 * height // 7)
     rect_height = 3 * int(height // 5)
@@ -203,30 +205,7 @@ def get_attns(attn_storage):
     return origs, edits
 
 
-# get character or attribute from attention layer or resnet layers
-def fix_shapes_l1(orig_attns, edit_attns, indices, tau=1):
-    shapes = []
-    num_frames =16
-    for location in ["down", "up", "mid"]:
-        for o in indices:
-            deltas = []
-            for edit_attn_map_integrated, ori_attn_map_integrated in zip(edit_attns[location], orig_attns[location]):
-                
-                for f in range(num_frames):
-                    delta = torch.tensor(0).to(torch.float16).cuda()
-                    edit_attn_map = edit_attn_map_integrated.chunk(2)[1]
-                    ori_attn_map = ori_attn_map_integrated.chunk(2)[1]
-                    window_size = int(ori_attn_map.shape[0] // num_frames)
-                    orig, edit = ori_attn_map[f * window_size:f * window_size + window_size,:,o], edit_attn_map[f * window_size:f * window_size + window_size,:,o]
-                    h = w = int(tensor(orig.shape[1]).sqrt().item())
-                    if h in [16]:
-                        delta = delta + (get_shape(orig) - get_shape(edit)).pow(2).mean()
-                    
-            deltas.append(delta.mean())
-        shapes.append(torch.stack(deltas).mean())
-    return torch.stack(shapes).sum()
-
-def fix_shapes_l2(orig_attns, edit_attns, indices, tau, frame):
+def E(orig_attns, edit_attns, indices, tau, frame):
     print(indices)
     print("frame", frame)
     shapes = []
@@ -252,7 +231,7 @@ def fix_shapes_l2(orig_attns, edit_attns, indices, tau, frame):
                     h = w = int(tensor(orig.shape[1]).sqrt().item())
                     orig_copy = copy.deepcopy(orig)
                     #ori = draw_filled_rectangle_per_channel(orig, h, w)
-                    ori = draw_circle(orig, h, w)
+                    ori = draw_circular_target_attention(orig, h, w)
                     #ori = orig
                     #print(ori.shape, orig.shape)
                     if h in [16, 8]:
@@ -279,20 +258,9 @@ def fix_shapes_l2(orig_attns, edit_attns, indices, tau, frame):
                         plt.show()'''
 
 
-                        #if len(ori.shape) < 3: orig, edit = orig[...,None], edit[...,None]
-                        #print(get_centroid(tau(get_shape(filter_tensor_by_value(orig)))))
-                        #print(get_centroid(get_shape(filter_tensor_by_value(edit))))
-                        #c_orig = get_centroid(tau(get_shape(filter_tensor_by_value(orig))))
-                        #c_edit = get_centroid(get_shape(filter_tensor_by_value(edit)))
-                        
-                        #delta = delta +  (torch.abs(c_orig[0] - c_edit[0]) + torch.abs(c_orig[1] - c_edit[1]))[0]
-                        #orig = roll_shape(orig, direction='right', factor=0.1 * f / num_frames)
-                        #first_roll = roll_shape(get_shape(ori), 'right', 0.02 * f)
                         test = torch.sum(ori, dim=0).unsqueeze(0)
-                        #print(test.shape)
-                        #print(get_shape(ori).shape)
-                        #delta = (roll_shape(get_shape(torch.sum(ori, dim=0).unsqueeze(0)), 'right', 0.05 * f) - get_shape(torch.sum(edit,dim=0).unsqueeze(0))).pow(2).mean()
-                        #delta = (torch.sum(roll_shape(get_shape(ori), 'up', 0.02 * f), dim=0).view(h, w) - torch.sum(get_shape(edit), dim=0).view(h, w)).pow(2).mean()
+                        
+                        #control how the target attention moves at each frame
                         first_roll = roll_shape(get_shape(ori), 'right', 0.00 * f)
                         delta = (get_shape(roll_shape(first_roll, 'down', 0.0 * f)) - get_shape(edit)).pow(2).mean()
                         
@@ -305,47 +273,9 @@ def fix_shapes_l2(orig_attns, edit_attns, indices, tau, frame):
         shapes.append(torch.stack(deltas).mean())
     return torch.stack(shapes).sum()
 
-def fix_shapes_l3(orig_attns, edit_attns, indices, tau=fc.noop):
-    shapes = []
-    num_frames = 16
-    for location in ["up", "mid"]:
-        for o in [indices[0], 0]:
-            for edit_attn_map_integrated, ori_attn_map_integrated in zip(edit_attns[location], orig_attns[location]):
-                for f in range(num_frames):
-                    deltas = []
-                    edit_attn_map = edit_attn_map_integrated.chunk(2)[1]
-                    ori_attn_map = ori_attn_map_integrated.chunk(2)[1]
-                    window_size = int(ori_attn_map.shape[0] // num_frames)
-                    orig, edit = ori_attn_map[f * window_size:f * window_size + window_size,:,o], edit_attn_map[f * window_size:f * window_size + window_size,:,o]
-                    orig, edit = ori_attn_map[:,:,o], edit_attn_map[:,:,o]
-                    if len(orig.shape) < 3: orig, edit = orig[...,None], edit[...,None]
-                    t = orig + (orig.max())
-                    delta = (tau(get_shape(orig)) - get_shape(edit)).pow(2).mean()
-                    deltas.append(delta.mean())
-                shapes.append(torch.stack(deltas).mean())
-    return torch.stack(shapes).mean()
 
 
 
-def get_appearance(attn, feats):
-    # attn_fit = attn.permute(1, 0)
-    # attn_fit = attn_fit.detach().cpu().numpy()
-    # pca = PCA(n_components=3)
-    # pca.fit(attn_fit)
-    # feature_maps_pca = pca.transform(attn_fit)  # N X 3
-    # pca_img = feature_maps_pca.reshape(1, -1, 3)  # B x (H * W) x 3
-    # pca_img = pca_img.reshape(32, 32, 3)
-    # pca_img_min = pca_img.min(axis=(0, 1))
-    # pca_img_max = pca_img.max(axis=(0, 1))
-    # pca_img = (pca_img - pca_img_min) / (pca_img_max - pca_img_min)
-    # pca_img = Image.fromarray((pca_img * 255).astype(np.uint8))
-    # pca_img = T.Resize(512, interpolation=T.InterpolationMode.NEAREST)(pca_img)
-    # pca_img.save(os.path.join(f"1.png"))
-    if not len(attn.shape) == 3: attn = attn[:,:,None]
-    h = w = int(tensor(attn.shape[-2]).sqrt().item())
-    shape = get_shape(attn).detach().mean(0).view(h,w,attn.shape[-1])
-    feats = feats.mean((0,1))[:,:,None]
-    return (shape * feats).sum() / shape.sum()
 
 
 def fix_appearances(orig_attns, ori_feats, edit_attns, edit_feats, indices):
@@ -518,21 +448,15 @@ def move_object_by_centroid(attn_storage, indices, target_centroid=None, shape_w
     position_term = position_weight * position_deltas(origs, edits, obj_idx, target_centroid=target_centroid)
     return shape_term + appearance_term + size_term + position_term
 
-def move_object_by_shape(attn_storage, indices, tau=fc.noop, shape_weight=1, appearance_weight=1, position_weight=8, ori_feats=None, edit_feats=None, frame=None, **kwargs):
+def edit_by_E(attn_storage, indices, tau=fc.noop, shape_weight=1, appearance_weight=1, position_weight=8, ori_feats=None, edit_feats=None, frame=None, **kwargs):
     origs, edits = get_attns(attn_storage)
-    # orig_selfs = [v['orig'] for k,v in attn_storage.storage.items() if 'attn1' in k and v['orig'].shape[-1] == 4096]
-    # edit_selfs = [v['edit'] for k,v in attn_storage.storage.items() if 'attn1' in k and v['orig'].shape[-1] == 4096]
     if len(indices) > 1: 
         obj_idx, other_idx = indices
         indices = torch.cat([obj_idx, other_idx])
-    #shape_term = shape_weight * fix_shapes_l1(origs, edits, other_idx)
-    appearance_term = appearance_weight * fix_appearances(origs, ori_feats, edits, edit_feats, indices)
-    # size_term = size_weight*fix_sizes(origs, edits, obj_idx)
-    # position_term = position_weight*position_deltas_2(origs, edits, obj_idx, target_centroid=target_centroid)
-    # self_term = self_weight*fix_selfs_2(orig_selfs, edit_selfs, t=t)
-    move_term = position_weight * fix_shapes_l2(origs, edits, obj_idx, tau=tau, frame=frame) 
+
+    move_term = position_weight * E(origs, edits, obj_idx, tau=tau, frame=frame) 
     #print(move_term  , shape_term , appearance_term)
-    return move_term  + appearance_term #+ shape_term #+ appearance_term
+    return move_term  
 
 def fix_appearances_by_feature(ori_feats, edit_feats, indices):
     appearances = []
