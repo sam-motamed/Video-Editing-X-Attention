@@ -26,11 +26,14 @@ git clone https://huggingface.co/damo-vilab/text-to-video-ms-1.7b ./models/model
 You can edit an oject in a video via the jupyter notebook.
 Simply provide a prompt and set ```obj_to_edit``` to a word in the prompt you want to edit.
 To control the size and motion of the object, refer to ```function E in guidance_function.py```.
+Experimenht with different backward guidance scales and prompts to get the desired edit.
+Note that current T2V models produce noisy cross-attentions so if your edit doesn't work, visualize the cross-attentions, this could be why.
 
 ## To Dos
 
 - [ ] Enable real video editing
 - [ ] Support mode resolutions
+- [ ] Intergaret DiT based T2V backbones like Open Sora
 
 
 
