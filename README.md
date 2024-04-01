@@ -22,12 +22,15 @@ cd Video-Editing-X-Attention
 git lfs install
 git clone https://huggingface.co/damo-vilab/text-to-video-ms-1.7b ./models/model_scope_diffusers/
 ```
-## Editing
+## Editing Videos
 You can edit an oject in a video via the jupyter notebook.
 Simply provide a prompt and set ```obj_to_edit``` to a word in the prompt you want to edit.
 To control the size and motion of the object, refer to ```function E in guidance_function.py```.
 
+## To Dos
 
+- [ ] Enable real video editing
+- [ ] Support mode resolutions
 
 
 
