@@ -1,16 +1,7 @@
-# Copyright 2022 Google LLC
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#      http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+#Created by Saman Motamed
+#We build on the foolwoing works:
+# https://github.com/google/prompt-to-prompt
+# https://github.com/Sainzerjj/Free-Guidance-Diffusion/tree/master
 
 import numpy as np
 import torch
@@ -273,70 +264,6 @@ def prepare_input_latents(
     return latents
 
 
-def initialize_pipeline(
-    model: str,
-    device: str = "cuda",
-    xformers: bool = False,
-    sdp: bool = False,
-    lora_path: str = "",
-    lora_rank: int = 64,
-    lora_scale: float = 1.0
-):
-    spatial_lora_path: str = ""
-    temporal_lora_path: str = "./outputs/train/car_16/checkpoint-200/temporal/lora/"
-    #lora_rank: int = 64,
-    spatial_lora_scale: float = 1.0
-    temporal_lora_scale: float = 1.0
-    
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-
-        scheduler, tokenizer, text_encoder, vae, _unet = load_primary_models(model)
-        del _unet  # This is a no op
-        unet = UNet3DConditionModel.from_pretrained(model, subfolder="unet")
-    
-    freeze_models([vae, text_encoder, unet])
-    lora_manager_temporal = LoraHandler(
-        version="cloneofsimo",
-        use_unet_lora=True,
-        use_text_lora=False,
-        save_for_webui=False,
-        only_for_webui=False,
-        unet_replace_modules=["TransformerTemporalModel"],
-        text_encoder_replace_modules=None,
-        lora_bias=None
-    )
-
-    unet_lora_params, unet_negation = lora_manager_temporal.add_lora_to_model(
-        True, unet, lora_manager_temporal.unet_replace_modules, 0, lora_path, r=lora_rank, scale=lora_scale)
-    
-    unet.eval()
-    text_encoder.eval()
-    unet_and_text_g_c(unet, text_encoder, False, False)
-
-    pipe = TextToVideoSDPipeline.from_pretrained(
-        pretrained_model_name_or_path=model,
-        scheduler=scheduler,
-        tokenizer=tokenizer,
-        text_encoder=text_encoder.to("cuda", dtype=torch.half),
-        vae=vae.to(device=device, dtype=torch.half),
-        unet=unet.to(device=device, dtype=torch.half),
-    )
-    pipe.scheduler = DPMSolverMultistepScheduler.from_config(pipe.scheduler.config)
-
-    unet.disable_gradient_checkpointing()
-    handle_memory_attention(xformers, sdp, unet)
-    vae.enable_slicing()
-
-    inject_inferable_lora(pipe, lora_path, r=lora_rank)
-
-    return pipe
-
-
-
-
-
-
 
 def encode(pipe: TextToVideoSDPipeline, pixels: Tensor, batch_size: int = 8):
     nf = pixels.shape[2]
@@ -374,22 +301,6 @@ def decode(pipe: TextToVideoSDPipeline, latents: Tensor, batch_size: int = 8):
     pixels = rearrange(pixels, "(b f) c h w -> b c f h w", f=nf)
 
     return pixels.float()
-
-
-
-
-
-
-
-
-def some_test_loss(attention_store):
-
-    return torch.tensor(torch.sum(attention_store['down_cross'][0][40, 70, 2]))
-
-
-
-
-
 
 
 
@@ -450,13 +361,7 @@ def sample(unet, latents, scheduler, t, feature_layer, guidance_scale, cond_prom
 
 def video_diffusion_step(pipe, model_outputs, prompt_embeds, controller, latents, window_size, rotate, t, i, guidance_scale, low_resource=False):
     
-
-
-
     edit_scheduler = copy.deepcopy(pipe.scheduler)
-
-
-
 
     order = pipe.scheduler.config.solver_order if "solver_order" in pipe.scheduler.config else pipe.scheduler.order
     do_classifier_free_guidance = guidance_scale > 1.0
@@ -606,6 +511,7 @@ def all_word_indexes(model, prompt, object_to_edit=None, **kwargs):
             return obj_idx, other_idx
         else: 
             return torch.where(prompt_inputs < 49405)[1]
+        
 def encode_prompt(
         model,
         prompt,
@@ -764,9 +670,14 @@ def encode_prompt(
             final_prompt_embeds = torch.cat([negative_prompt_embeds, prompt_embeds])
 
         return final_prompt_embeds, prompt_embeds
+
+
+
+
+#guidance schedule for updating z at specified steps
 def do_self_guidance(model, time, T, scheduler):
         if type(scheduler).__name__ == "DDPMScheduler":
-            if time <= int((5*T)/16): return True
+            if time <= int((4*T)/16): return True
             elif time >= int(T - T/32): return False
             elif time % 2 == 0: return True
             else: return False
@@ -785,9 +696,12 @@ def do_self_guidance(model, time, T, scheduler):
             elif time >= T - 5: return False
             elif time % 2 == 0: return True
             else: return False
+
+
 def text2video(
     model: TextToVideoSDPipeline,
     prompt: Optional[List[str]],
+    obj_to_edit,
     objects,
     guidance_func,
     
@@ -815,7 +729,6 @@ def text2video(
         init_weight = 0
         device = model.device
         num_images_per_prompt = 1
-        obj_to_edit = 'darth'
         feature_layer = model.unet.up_blocks[-1].resnets[-2]
 
         max_guidance_iter_per_step: int = 1
@@ -823,11 +736,7 @@ def text2video(
         do_classifier_free_guidance = guidance_scale > 1.0
         ori_prompt = None
         prompt_embeds = None
-        objects = ['darth', 'water']
         window_size = min(num_frames, window_size)
-
-       
-
 
         latents = prepare_input_latents(
                 pipe=model,
@@ -854,8 +763,6 @@ def text2video(
             negative_prompt_embeds=negative_prompt_embeds,
         )
 
-   
-
 
         if ori_prompt is None :
             ori_prompt = prompt
@@ -868,11 +775,6 @@ def text2video(
             negative_prompt,
             negative_prompt_embeds=negative_prompt_embeds,
         )
-
-
-
-        
-
 
         # set the scheduler to start at the correct timestep
         model.scheduler.set_timesteps(num_inference_steps, device="cuda")
@@ -888,19 +790,16 @@ def text2video(
             )
     
         # manually track previous outputs for the scheduler as we continually change the section of video being diffused
-        model_outputs = [None] * order
-        # prepare input latents
-        
-        
-        
+
         ####################### taken from free muidance #####################
         unet = model.unet
 
         spatial_lora_path: str = ""
-        temporal_lora_path: str = "./outputs/train/car_16/checkpoint-200/temporal/lora/"
+        temporal_lora_path: str = ""
         #lora_rank: int = 64,
         spatial_lora_scale: float = 1.0
         lora_scale: float = 1.0
+
         lora_manager_temporal = LoraHandler(
         version="cloneofsimo",
         use_unet_lora=True,
@@ -912,8 +811,10 @@ def text2video(
         lora_bias=None
         )
 
-        unet_lora_params, unet_negation = lora_manager_temporal.add_lora_to_model(
-        True, unet, lora_manager_temporal.unet_replace_modules, 0, lora_path, r=lora_rank, scale=lora_scale)
+
+        #enabling LoRA MOtionDirector guidance...In the works
+        #unet_lora_params, unet_negation = lora_manager_temporal.add_lora_to_model(
+        #True, unet, lora_manager_temporal.unet_replace_modules, 0, lora_path, r=lora_rank, scale=lora_scale)
      
 
 
@@ -937,154 +838,78 @@ def text2video(
             raise ValueError('Provide a list of object strings from the prompt.')
         if g_name not in ['edit_layout', 'edit_appearance', 'edit_layout_by_feature'] and obj_to_edit is None:
             raise ValueError('Provide an object string for editing.')
-        if objects is None:
+        if obj_to_edit is None:
             
             indices = all_word_indexes(model, prompt, objects=objects, object_to_edit=obj_to_edit)
         else:
             
             indices = choose_object_indexes(model, prompt, objects=objects, object_to_edit=obj_to_edit)
 
-
-
         ori_latents = latents.clone().detach().cuda()
         edit_latent = latents.clone().detach().cuda()
   
         model_outputs = [None] * order
         edit_scheduler = copy.deepcopy(model.scheduler)
-        for i, t in enumerate(timesteps):
-            
-            prepare_attention(unet, pred_type='ori', set_store=True)
-            #prepare_attention(unet, pred_type='edit', set_store=True)
-            
+        for i, t in enumerate(timesteps):        
+            prepare_attention(unet, pred_type='ori', set_store=True)        
             ori_noise_pred = unet(ori_latents,t,encoder_hidden_states=ori_cond_prompt_embeds).sample
             ori_feats = hook.feats if feature_layer is not None else None
             
-            
-            #ori_noise_pred, ori_feats = sample(model.unet, ori_latents, model.scheduler, t, feature_layer, guidance_scale, ori_cond_prompt_embeds, ori_prompt_embeds,  hook, pred_type='ori', set_store=True, do_classifier_free_guidance=do_classifier_free_guidance)
-            #ori_latents = model.scheduler.step(ori_noise_pred, t, ori_latents).prev_sample
-
-            
-            
             with torch.enable_grad():
-                
-                    
-                    #ori_feats = hook.feats if feature_layer is not None else None
-                    #latents = latents.clone().detach().requires_grad_(True).to("cuda")
-                    #latents = model.scheduler.scale_model_input(latents, t)
-                    
-                    
-                    
-                    print(t)
-                    #if t > 700:
-                    if do_self_guidance(model, i, len(model.scheduler.timesteps), model.scheduler):
-                        for guidance_iter in range(1):
-                            latents = latents.requires_grad_(True).to("cuda")
-                            latent_model_input = latents
-                            latent_model_input = model.scheduler.scale_model_input(latent_model_input, t)
-                            
-                            
-                            
-                            
-                           
-                            prepare_attention(unet, pred_type='edit', set_store=True)
-                            edit_noise_pred = unet(latent_model_input,t,encoder_hidden_states=cond_prompt_embeds).sample
-                            
-                            edit_feats = hook.feats if feature_layer is not None else None
-                            
-                            loss = guidance_func(attention_store, indices, ori_feats=ori_feats, edit_feats=edit_feats)
-                            
-                            grad_cond = torch.autograd.grad(
-                                loss.requires_grad_(True),
-                                [latents],
-                                retain_graph=True,
-                            )[0]
-                            
-                            print("loss :", loss)
-                            if isinstance(model.scheduler, LMSDiscreteScheduler):
-                                sig_t = model.scheduler.sigmas[i]
-                            else:
-                                sig_t = 1 - model.scheduler.alphas_cumprod[t]
-                            latents = latents -15 * sig_t * grad_cond
-                            torch.cuda.empty_cache()
-                            #latents = latents + 10 * sig_t * grad_cond
-                    with torch.no_grad():
-
-                        ori_latent_model_input = (torch.cat([ori_latents] * 2) if do_classifier_free_guidance else ori_latents)
-                        ori_latent_model_input = model.scheduler.scale_model_input(ori_latent_model_input , t)
-
-                        ori_edit_noise_pred= unet(ori_latent_model_input,t,encoder_hidden_states=ori_prompt_embeds).sample
-
-                        if do_classifier_free_guidance:
-                            ori_noise_pred_uncond, ori_noise_pred_text = ori_edit_noise_pred.chunk(2)
-                            ori_edit_noise_pred = ori_noise_pred_uncond + guidance_scale * (
-                                ori_noise_pred_text - ori_noise_pred_uncond
-                            )
-
-                        latent_model_input = (torch.cat([latents] * 2) if do_classifier_free_guidance else latents)
-                        latent_model_input = model.scheduler.scale_model_input(latent_model_input, t)
+                if do_self_guidance(model, i, len(model.scheduler.timesteps), model.scheduler):
+                    for guidance_iter in range(1):
+                        latents = latents.requires_grad_(True).to("cuda")
+                        latent_model_input = latents
+                        latent_model_input = model.scheduler.scale_model_input(latent_model_input, t)                
                         prepare_attention(unet, pred_type='edit', set_store=True)
-
-                        edit_noise_pred= unet(latent_model_input,t,encoder_hidden_states=prompt_embeds).sample
-
-                        if do_classifier_free_guidance:
-                            noise_pred_uncond, noise_pred_text = edit_noise_pred.chunk(2)
-                            edit_noise_pred = noise_pred_uncond + guidance_scale * (
-                                noise_pred_text - noise_pred_uncond
-                            )
-
-
-                        #latent_model_input = latents
-                        #edit_noise_pred, edit_feats = sample(model.unet, latent_model_input, edit_scheduler, t, feature_layer, guidance_scale, cond_prompt_embeds, prompt_embeds, hook, pred_type='edit', set_store=True, do_classifier_free_guidance=do_classifier_free_guidance)
-                        latents =  edit_scheduler.step(edit_noise_pred, t, latents).prev_sample
-                        ori_latents = model.scheduler.step(ori_edit_noise_pred, t, ori_latents).prev_sample
-                        gc.collect()
-                        torch.cuda.empty_cache()
-
-
-            gc.collect()
-            torch.cuda.empty_cache()
-            
-
-
-            
-            '''with torch.enable_grad():
-                edit_latent = edit_latent.requires_grad_(True)
-                #if not do_self_guidance(model, i, len(model.scheduler.timesteps), model.scheduler):
-                for doit in range(1):
-                    
-                    edit_noise_pred, edit_feats = sample(model.unet, edit_latent, edit_scheduler, t, feature_layer, guidance_scale, cond_prompt_embeds, prompt_embeds, hook, pred_type='edit', set_store=True, do_classifier_free_guidance=do_classifier_free_guidance)
-                    if do_self_guidance(model, i, len(model.scheduler.timesteps), model.scheduler):
-                        
+                        edit_noise_pred = unet(latent_model_input,t,encoder_hidden_states=cond_prompt_embeds).sample    
+                        edit_feats = hook.feats if feature_layer is not None else None
                         loss = guidance_func(attention_store, indices, ori_feats=ori_feats, edit_feats=edit_feats)
-                            
                         grad_cond = torch.autograd.grad(
-                        loss.requires_grad_(True),
-                        [edit_latent],
-                        retain_graph=True)[0]
-                    with torch.no_grad():
+                            loss.requires_grad_(True),
+                            [latents],
+                            retain_graph=True,
+                        )[0]
+                        print("loss :", loss)
                         if isinstance(model.scheduler, LMSDiscreteScheduler):
                             sig_t = model.scheduler.sigmas[i]
                         else:
-                            sig_t = 1 -  model.scheduler.alphas_cumprod[t]
-                        
-                        
-                        edit_noise_pred += 1000 * sig_t * grad_cond
-                        #edit_latent = edit_latent + 500 * sig_t * grad_cond
+                            sig_t = 1 - model.scheduler.alphas_cumprod[t]
+                        backward_guidance_scale = 15
+                        latents = latents - backward_guidance_scale * sig_t * grad_cond
+                        torch.cuda.empty_cache()
                 with torch.no_grad():
-                    edit_latent =  edit_scheduler.step(edit_noise_pred, t, edit_latent).prev_sample
+                    ori_latent_model_input = (torch.cat([ori_latents] * 2) if do_classifier_free_guidance else ori_latents)
+                    ori_latent_model_input = model.scheduler.scale_model_input(ori_latent_model_input , t)
+                    ori_edit_noise_pred= unet(ori_latent_model_input,t,encoder_hidden_states=ori_prompt_embeds).sample
+                    if do_classifier_free_guidance:
+                        ori_noise_pred_uncond, ori_noise_pred_text = ori_edit_noise_pred.chunk(2)
+                        ori_edit_noise_pred = ori_noise_pred_uncond + guidance_scale * (
+                            ori_noise_pred_text - ori_noise_pred_uncond
+                        )
+                    latent_model_input = (torch.cat([latents] * 2) if do_classifier_free_guidance else latents)
+                    latent_model_input = model.scheduler.scale_model_input(latent_model_input, t)
+                    prepare_attention(unet, pred_type='edit', set_store=True)
+                    edit_noise_pred= unet(latent_model_input,t,encoder_hidden_states=prompt_embeds).sample
+                    if do_classifier_free_guidance:
+                        noise_pred_uncond, noise_pred_text = edit_noise_pred.chunk(2)
+                        edit_noise_pred = noise_pred_uncond + guidance_scale * (
+                            noise_pred_text - noise_pred_uncond
+                        )
+                    latents =  edit_scheduler.step(edit_noise_pred, t, latents).prev_sample
+                    ori_latents = model.scheduler.step(ori_edit_noise_pred, t, ori_latents).prev_sample
+                    gc.collect()
+                    torch.cuda.empty_cache()
             gc.collect()
             torch.cuda.empty_cache()
-            #call the callback, if provided'''
 
         
         orig_vid = decode(model, ori_latents, vae_batch_size)
         videos = decode(model, latents, vae_batch_size)
-            
+           
     
         return videos, orig_vid, latents
        
-
-
 
 def register_attention_control(unet, attention_store):
         attn_procs = {}
@@ -1107,14 +932,7 @@ def register_attention_control(unet, attention_store):
                 place_in_unet = "w"
                 cross_att_count += 1
 
-                attn_procs[name] = CustomAttnProcessor(attnstore=attention_store, place_in_unet="w")
-
-                    
-
-                
-
-            
-        
+                attn_procs[name] = CustomAttnProcessor(attnstore=attention_store, place_in_unet="w") 
 
         unet.set_attn_processor(attn_procs)
         attention_store.num_att_layers = cross_att_count
