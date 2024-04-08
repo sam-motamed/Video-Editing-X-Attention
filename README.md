@@ -49,7 +49,7 @@ Note that current T2V models produce noisy cross-attentions so if your edit does
 
 
 
-### Special thanks to the following works that helped us immensely in building this work
+### Special thanks to the following works for open sourcing their efforts that helped us immensely in building this work
 
 [ExponentialML/Text-To-Video-Finetuning](https://github.com/ExponentialML/Text-To-Video-Finetuning) 
 <br>[silent-chen/layout-guidance](https://github.com/silent-chen/layout-guidance/tree/main)
