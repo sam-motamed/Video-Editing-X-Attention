@@ -1,4 +1,5 @@
 # Investigating the Effectiveness of Cross Attention to Unlock Zero-Shot Editing of Text-to-Video Diffusion Models
+## CVPR 2024 Generative Models for Computer Vision Workshop
 <figures>
     <div>
       <img src="resources/video-edit-x-att (2).svg" width="1240" height="410" >  
